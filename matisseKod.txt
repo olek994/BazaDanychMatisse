@@ -1,0 +1,67 @@
+create class Wydzial(
+	ID_Wydzial int,
+	nazwa String
+);
+
+create Class Osoba(
+	ID_Osoba int,
+	Imie String,
+	Nazwisko String,
+	PESEL String,
+	Adres String,
+	tel String
+);
+
+create Class Pracownik UNDER Osoba(
+	ID_Pracownik int,
+	Pensja String
+);
+
+create class UczestnikSprawy UNDER Osoba(
+	ID_Uczestnik int,
+	TypUczestnika String
+);
+
+insert into Wydzial (ID_Wydzial, nazwa) values (1,'Cywilny');
+insert into Wydzial (ID_Wydzial, nazwa) values (2,'Karny');
+insert into Wydzial (ID_Wydzial, nazwa) values (3,'Gospodarczy');
+
+insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (1, 'Aleksander', 'Lipa', '94012144784', 'Kasprzaka 13, Warszawa', '654741254');
+insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (2, 'Patryk', 'Loktowski', '94012021012', 'Lipska 2/3, Warszawa', '745213654');
+insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (3, 'Mikolaj', 'Alanowski', '90011235478', 'Abacka 13, Warszawa', '745236478');
+insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (4, 'Pawel', 'Olacki', '90011235478', 'przeworska 2a, Warszawa', '784512365');
+insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (5, 'Joanna', 'Lipa', '89755511244', 'Suwalska 13, Warszawa', '874521547');
+
+insert into UczestnikSprawy (ID_Uczestnik, TypUczestnika) values (1, 'Powod');
+insert into UczestnikSprawy (ID_Uczestnik, TypUczestnika) values (2, 'Pozwany');
+
+---- Tworzenie pracownikow ---------
+
+Select REF(s) from Stanowisko s where Nazwa = 'Adwokat' into aStanowisko;
+
+Insert Into Pracownik (ID_Osoba, Imie, Nazwisko, PESEL, ID_Pracownik, Pensja, Pracuje_jako)
+			values (10,'Jan', 'Kowalski', '1245789725847',12,'12,525',aStanowisko);
+			
+Select REF(s) from Stanowisko s where Nazwa = 'Sedzia' into bStanowisko;
+
+Insert Into Pracownik (ID_Osoba, Imie, Nazwisko, PESEL, ID_Pracownik, Pensja, Pracuje_jako)
+			values (11,'Tomek', 'Relko', '1158987415658',13,'12,000',bStanowisko);
+			
+Select REF(s) from Stanowisko s where Nazwa = 'Prokurator' into cStanowisko;
+
+Insert Into Pracownik (ID_Osoba, Imie, Nazwisko, PESEL, ID_Pracownik, Pensja, Pracuje_jako)
+			values (12,'Marek', 'Marwkoski', '1232478522885',14,'12,999',cStanowisko);
+			
+
+--------- Metoda1 --------
+create static method zliczSprawy(numerSali String)
+returns integer
+for Sprawa
+Begin
+	Declare zlicz Integer default 0;
+	select count(*) into zlicz from sprawa where sprawa.Sala = numerSali;
+	return zlicz;
+End;
+
+---- Przyklad wywolania----
+Call Sprawa::zliczSprawy('33');
