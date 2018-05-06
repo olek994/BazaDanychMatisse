@@ -1,68 +1,75 @@
-create class Wydzial(
-	ID_Wydzial int,
-	nazwa String
-)
-
-insert into Wydzial (ID_Wydzial, nazwa) values (1,'Cywilny');
-insert into Wydzial (ID_Wydzial, nazwa) values (2,'Karny');
-insert into Wydzial (ID_Wydzial, nazwa) values (3,'Gospodarczy');
-
-
-create Class Osoba(
-	ID_Osoba int,
-	Imie String,
-	Nazwisko String,
-	PESEL String,
-	Adres String,
-	tel String
-)
-
-insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (1, 'Aleksander', 'Lipa', '94012144784', 'Kasprzaka 13, Warszawa', '654741254');
-insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (2, 'Patryk', 'Loktowski', '94012021012', 'Lipska 2/3, Warszawa', '745213654');
-insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (3, 'Mikolaj', 'Alanowski', '90011235478', 'Abacka 13, Warszawa', '745236478');
-insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (4, 'Pawel', 'Olacki', '90011235478', 'przeworska 2a, Warszawa', '784512365');
-insert into Osoba (ID_Osoba, Imie, Nazwisko, PESEL, Adres, tel) values (5, 'Joanna', 'Lipa', '89755511244', 'Suwalska 13, Warszawa', '874521547');
-
-
-create Class Pracownik UNDER Osoba(
-	ID_Pracownik int,
-	Pensja String
-)
-
-Insert into Pracownik (ID_Pracownik, Pensja) values (1, '6500');
-Insert into Pracownik (ID_Pracownik, Pensja) values (2, '13000');
-Insert into Pracownik (ID_Pracownik, Pensja) values (3, '20000');
-
-
-create class UczestnikSprawy UNDER Osoba(
-	ID_Uczestnik int,
-	TypUczestnika String
-)
-
-insert into UczestnikSprawy (ID_Uczestnik, TypUczestnika) values (1, 'Powod');
-insert into UczestnikSprawy (ID_Uczestnik, TypUczestnika) values (2, 'Pozwany');
-
 
 Create class Stanowisko(
 	ID_Stanowisko int,
-	Nazwa String
-)
+	Nazwa String,
+	Przydzielone References set (Osoba) Cardinality (0,-1) Inverse Pracownik.Pracuje_jako
+);
 
-insert into Stanowisko (ID_Stanowisko, Nazwa) values (1, 'Sedzia');
-insert into Stanowisko (ID_Stanowisko, Nazwa) values (2, 'Adwokat');
-insert into Stanowisko (ID_Stanowisko, Nazwa) values (3, 'Prokurator');
+alter Class Pracownik add Relationship Pracuje_jako references (Stanowisko) Cardinality(0,1) Inverse Stanowisko.Przydzielone;
+
+
+
 
 create Class Sprawa(
 	ID_Sprawa int,
 	Numer int,
 	Data String,
 	Sala string,
-	Zatrudnila References set (Pracownik) Cardinality (0,-1) Inverse Pracownik.Pracuje,
-	Posiada References set (UczestnikSprawy) Cardinality (0,-1) Inverse UczestnikSprawy.Uczestniczy
+	Zatrudnila References set (Osoba) Cardinality (0,-1) Inverse Pracownik.Pracuje,
+	Posiada References set (Osoba) Cardinality (0,-1) Inverse UczestnikSprawy.Uczestniczy,
+	Miesci_sie References set (Wydzial) Cardinality (0,1) Inverse Wydzial.Zawiera
 );
 alter Class UczestnikSprawy add Relationship Uczestniczy references (Sprawa) Cardinality(0,-1) Inverse Sprawa.Posiada;
 alter Class Pracownik add Relationship Pracuje references (Sprawa) Cardinality(0,-1) Inverse Sprawa.Zatrudnila;
+alter Class Wydzial add Relationship Zawiera references (Sprawa) Cardinality(0,-1) Inverse Sprawa.Miesci_sie;
 
-insert into Sprawa (ID_Sprawa, Numer, Data, Sala) values (1, 321, '2017-01-03', '3A');
-insert into Sprawa (ID_Sprawa, Numer, Data, Sala) values (2, 322, '2017-01-04', '33');
-insert into Sprawa (ID_Sprawa, Numer, Data, Sala) values (3, 323, '2017-01-06', '12');
+
+			
+			
+insert into Stanowisko (ID_Stanowisko, Nazwa) values (1, 'Sedzia');
+insert into Stanowisko (ID_Stanowisko, Nazwa) values (2, 'Adwokat');
+insert into Stanowisko (ID_Stanowisko, Nazwa) values (3, 'Prokurator');
+
+
+ -- TWORZENIE NOWYCH SPRAW
+
+Select REF(w) from Wydzial w where nazwa = 'Cywilny' into aWydzial;
+Select REF(p) from Pracownik p where ID_Pracownik = 2 into aPracownik;
+Select REF(u) from UczestnikSprawy u where ID_Uczestnik = 2 into aUczestnik;
+
+insert into Sprawa (ID_Sprawa, Numer, Data, Sala,Posiada,Zatrudnila, Miesci_sie) values (11,121,'2018-03-03','121A',aUczestnik,aPracownik,aWydzial);
+
+Select REF(w) from Wydzial w where nazwa = 'Cywilny' into aWydzial;
+Select REF(p) from Pracownik p where ID_Pracownik = 1 into aPracownik;
+Select REF(u) from UczestnikSprawy u where ID_Uczestnik = 1 into aUczestnik;
+
+insert into Sprawa (ID_Sprawa, Numer, Data, Sala,Posiada,Zatrudnila, Miesci_sie) values (12,125,'2018-04-03','122A',aUczestnik,aPracownik,aWydzial);
+
+
+---------METODY--------
+		
+create static method pokazPracownikow(Stanowisko String)
+returns Selection(Osoba)
+for Pracownik
+begin
+	Declare pracownicy Selection(Osoba);
+	select Ref(p) from Pracownik p where p.Pracuje_Jako.Nazwa = Stanowisko into pracownicy;
+	return pracownicy;
+end;
+
+ ---Przyklad dzialania----
+ Call Pracownik::pokazPracownikow('Adwokat')
+ 
+ 
+ 
+create static method pokazSprawy(nazwaWydzialu String)
+returns Selection(Sprawa)
+for Wydzial
+begin
+	declare sprawy Selection(Sprawa);
+	select Ref(s) from Sprawa s where s.Miesci_sie.nazwa = nazwaWydzialu into sprawy;
+	return sprawy;
+end;
+
+ -----Przyklad dzialania----
+ Call Wydzial::pokazSprawy('Cywilny')
